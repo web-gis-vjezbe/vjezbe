@@ -1,0 +1,243 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.css">
+    
+    
+<style>
+      .map {
+        width: 100%;
+        height:600px;
+      }
+</style>
+
+
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@main/dist/en/v7.0.0/legacy/ol.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
+
+</head>
+
+<body>
+
+
+	<div id="map" class="map"></div>	
+	Način rada
+	<align="left"><button id="koordinate" class="code">Očitavanje koordinata</button>
+	<align="left"><button id="podaci" class="code">Prikaz atributa</button>
+	<br>Format značajki: objektna klasa odnosno sloj (1,2 ili 3); id (neki identifikator značajke); atribut (vrijednost nekog atributa); wktgeometrija (wkt zapis geometrije)
+	<br><textarea id="wkttekst" rows="15" cols="130"> </textarea>
+	<align="left"><button id="ucitaj" class="code">Učitaj značajke</button>
+
+
+	
+    <script type="text/javascript">
+
+
+
+//**********************************************************
+//Instanciranje mape i viewa te dodavanje layera, kontrola i ostalog
+//************************************************************
+
+
+
+proj4.defs('EPSG:3765','+proj=tmerc +lat_0=0 +lon_0=16.5 +k=0.9999 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+ol.proj.proj4.register(proj4);
+var htrs96 = ol.proj.get('EPSG:3765');
+
+
+
+ const stil1 = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'red',
+      width: 2,
+    }),
+    fill: new ol.style.Fill({
+      color: 'rgba(200, 39, 39, 0.5)',
+    }),
+  });
+
+const stil2 = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'green',
+      width: 2,
+    }),
+    fill: new ol.style.Fill({
+      color: 'rgba(20, 200, 20, 0.5)',
+    }),
+  });
+
+const stil3 = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'black',
+      width: 2,
+    }),
+    fill: new ol.style.Fill({
+      color: 'rgba(200, 200, 200, 0.5)',
+    }),
+  });
+
+
+const raster = new ol.layer.Tile({
+  source: new ol.source.OSM(),
+});
+
+var DOFLayer =  new ol.layer.Tile({
+            title: 'DOF 2011',
+            //type: 'base',
+            visible: true,
+            source: new ol.source.TileWMS({
+            url: 'https://geoportal.dgu.hr/services/inspire/orthophoto_2019_2020/wms',
+            params: {'LAYERS': 'OI.OrthoimageCoverage', 'TILED': true}
+                    })
+           });
+
+
+const format = new ol.format.WKT();
+var wktIzvor1 = new ol.source.Vector();
+var wktIzvor2 = new ol.source.Vector();
+var wktIzvor3 = new ol.source.Vector();
+
+const wktVector1 = new ol.layer.Vector({
+  source: wktIzvor1,
+  style:stil1
+});
+
+const wktVector2 = new ol.layer.Vector({
+  source: wktIzvor2,
+  style:stil2
+});
+
+const wktVector3 = new ol.layer.Vector({
+  source: wktIzvor3,
+  style:stil3
+});
+
+
+const sourcePoint = new ol.source.Vector({wrapX: false});
+const vectorPoint = new ol.layer.Vector({source: sourcePoint, });   
+
+const map = new ol.Map({
+  layers: [DOFLayer, wktVector1,wktVector2,wktVector3, vectorPoint],
+  target: 'map',
+  view: new ol.View({
+    projection: htrs96,
+    center: [476200, 5046300],
+    //center: [1906400, 5564200],
+    zoom: 10,
+  }),
+});
+   
+  
+	
+crtanje = new ol.interaction.Draw({
+      source: sourcePoint,
+      type: "Point",
+    });
+map.addInteraction(crtanje);
+crtanje.setActive (false);
+
+
+crtanje.on('drawend',function(evt){
+	
+	var coords=evt.feature.getGeometry().getCoordinates();	
+	var x= coords[0].toFixed (2);
+	var y= coords[1].toFixed (2);
+	//alert ("E=" + x + " N=" +y );
+	alert (x + " " +y );
+
+});
+
+document.getElementById('ucitaj').onclick = function() {
+		
+
+	var znacajkeText= document.getElementById('wkttekst').value;
+	var znacajkePolje=znacajkeText.split(/\r?\n/);
+	console.log (znacajkePolje);
+
+	//*****************************************************************
+	//FORMAT podataka je fiksan i to: klasa, id, atribut, wktgeometrija
+	//*****************************************************************
+	for (var i = 0; i < znacajkePolje.length; i++) {
+		var jednaZnacajkaPolje=znacajkePolje[i].split(";");
+		var znacajka = format.readFeature(jednaZnacajkaPolje[3], {});
+		znacajka.setId(jednaZnacajkaPolje[1]);
+		znacajka.set ("atribut",jednaZnacajkaPolje[2])
+	
+		switch (parseInt(jednaZnacajkaPolje[0])) {
+			case 1: wktIzvor1.addFeature (znacajka);
+			break;
+			case 2: wktIzvor2.addFeature (znacajka);
+			break;
+			case 3: wktIzvor3.addFeature (znacajka);
+			default: 
+			alert("Pogreška u podacima");
+		}
+
+	}
+
+
+};
+
+
+
+
+document.getElementById('koordinate').onclick = function() {
+ 	prikazPodataka.setActive(false);
+	crtanje.setActive(true);		
+};
+
+document.getElementById('podaci').onclick = function() {
+ 	prikazPodataka.setActive(true);
+	crtanje.setActive(false);		
+};
+
+const prikazPodataka = new ol.interaction.Select();
+prikazPodataka.on('select',function(evt){	
+	
+	if (prikazPodataka.getFeatures().getArray().length!=0) {
+		var id=prikazPodataka.getFeatures().getArray()[0].getId();
+		var atribut=prikazPodataka.getFeatures().getArray()[0].get("atribut");
+		alert ("ID=" + id + " atribut="+atribut);
+
+	}		
+
+})
+
+map.addInteraction(prikazPodataka);
+prikazPodataka.setActive(false);
+
+
+    </script>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+							
+							  
+
+
+
+
+
+
+
+
+
