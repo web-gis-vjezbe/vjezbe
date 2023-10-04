@@ -1,0 +1,17 @@
+{
+"type": "FeatureCollection",
+"name": "smallLake",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3765" } },
+"features": [
+{ "type": "Feature", "properties": { "id": "3" }, "geometry": { "type": "Polygon", "coordinates": [ [ 
+
+
+
+[ 470087, 5062620 ] ,
+[ 470000, 5062440 ], 
+[ 470170, 5062480 ], 
+[ 470087, 5062620 ]
+
+] ] } }
+]
+}
