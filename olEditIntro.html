@@ -159,12 +159,14 @@ var vectorSlojPreuzeti = new ol.layer.Vector({
       });
 
 const DOF = new ol.layer.Tile({
-            title: 'DOF 2021',
+            title: 'DOF 2011',
             type: 'base',
             visible: true,
             source: new ol.source.TileWMS({
-            url: 'https://geoportal.dgu.hr/services/inspire/orthophoto_2019_2020/wms',
-            params: {'LAYERS': 'OI.OrthoimageCoverage', 'TILED': true}          
+            //url: 'https://geoportal.dgu.hr/services/inspire/orthophoto_2019_2020/wms',
+	    url: 'https://geoportal.dgu.hr/services/inspire/orthophoto_2011/wms',
+            //params: {'LAYERS': 'OI.OrthoimageCoverage', 'TILED': true} 
+	    params: {'LAYERS': 'OrthoImagery', 'TILED': true}                  
                     })
            });   
 
